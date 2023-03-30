@@ -1,6 +1,6 @@
 ---
 title: "blast"
-output: html_document
+output: md_document
 date: "2023-03-30"
 ---
 
@@ -12,23 +12,23 @@ date: "2023-03-30"
 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz
 
 
-```{bash}
+```bash
 cd /home/jovyan/applications
 curl -O https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz
 ```
 
-```{bash}
+```bash
 cd /home/jovyan/applications
 tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz
 ```
 
-```{bash}
+```bash
 ~/applications/ncbi-blast-2.13.0+/bin/blastx -h
 ```
 
 # Make a database
 
-```{bash}
+```bash
 cd ../data
 curl -O https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
 mv uniprot_sprot.fasta.gz uniprot_sprot_r2023_01.fasta.gz
@@ -37,7 +37,7 @@ ls ../data
 
 ```
 
-```{bash}
+```bash
 ~/applications/ncbi-blast-2.13.0+/bin/makeblastdb \
 -in ../data/uniprot_sprot_r2023_01.fasta \
 -dbtype prot \
@@ -47,7 +47,7 @@ ls ../data
 
 # download query
 
-```{bash}
+```bash
 curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
 -k \
 > ../data/Ab_4denovo_CLC6_a.fa
@@ -65,7 +65,7 @@ grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 
 # blast
 
-```{bash}
+```bash
 ~/applications/ncbi-blast-2.13.0+/bin/blastx \
 -query ../data/Ab_4denovo_CLC6_a.fa \
 -db ../blastdb/uniprot_sprot_r2023_01 \
@@ -77,7 +77,4 @@ grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 ```
 
 
-```{bash}
-curl -O "Accept: text/plain; format=tsv" "https://rest.uniprot.org/uniprotkb/search?query=reviewed:true+AND+organism_id:9606"
-```
 
