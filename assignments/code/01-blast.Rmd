@@ -79,11 +79,8 @@ grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 
 # Joining with Annotation information
 
-```bash
-curl https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab \
--k \
-> ../data/uniprot_table_r2023_01.tab
-```
+
+First need to change formate of blast output in bash...
 
 ```bash
 tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
@@ -91,16 +88,25 @@ tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
 ```
 
 
+
+## Now into R
+
+
 ```{{r}}
 library(tidyverse)
 ```
 
+
+read in data
 
 ```{{r}}
 bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
 
 spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", sep = '\t', header = TRUE)
 ```
+
+
+joining
 
 
 ```{{r}}

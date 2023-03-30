@@ -59,18 +59,22 @@
 
 # Joining with Annotation information
 
-    curl https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab \
-    -k \
-    > ../data/uniprot_table_r2023_01.tab
+First need to change formate of blast output in bash…
 
     tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
     > ../output/Ab_4-uniprot_blastx_sep.tab
 
+## Now into R
+
     library(tidyverse)
+
+read in data
 
     bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
 
     spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", sep = '\t', header = TRUE)
+
+joining
 
     left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
       select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
