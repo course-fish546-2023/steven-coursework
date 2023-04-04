@@ -1,0 +1,13 @@
+{
+	"n_targets": 73307,
+	"n_bootstraps": 0,
+	"n_processed": 2223387,
+	"n_pseudoaligned": 1103210,
+	"n_unique": 646282,
+	"p_pseudoaligned": 49.6,
+	"p_unique": 29.1,
+	"kallisto_version": "0.46.1",
+	"index_version": 10,
+	"start_time": "Tue Apr  4 16:34:57 2023",
+	"call": "/home/shared/kallisto/kallisto quant -i ../data/cgigas_roslin_rna.index -o ../output/kallisto_01/M44_S163 -t 40 --single -l 100 -s 10 /home/shared/8TB_HDD_01/sr320/github/nb-2023/Cgigas/data/M44_S163_L001_R1_001.fastq.gz"
+}
