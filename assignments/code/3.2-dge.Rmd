@@ -82,6 +82,21 @@ wget --recursive --no-parent --no-directories \
 https://gannet.fish.washington.edu/seashell/bu-github/nb-2023/Cgigas/data/nopp/
 ```
 
+```{r fastqc, engine='bash'}
+cd ../data 
+/home/shared/FastQC/fastqc *fastq.gz -o ../output
+```
+
+```{r multiqc, engine='bash'}
+cd ../output
+/home/shared/MultiQC.v1.12.dev0/multiqc . -o ../output
+```
+
+
+
+
+
+
 ## Obtain the reference
 
 ```{r pullref, engine='bash'}
