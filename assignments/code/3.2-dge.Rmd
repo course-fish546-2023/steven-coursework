@@ -82,20 +82,30 @@ wget --recursive --no-parent --no-directories \
 https://gannet.fish.washington.edu/seashell/bu-github/nb-2023/Cgigas/data/nopp/
 ```
 
+
+
 ```{r fastqc, engine='bash'}
 cd ../data 
 /home/shared/FastQC/fastqc *fastq.gz -o ../output
 ```
 
-```{r multiqc, engine='bash'}
+```{bash}
+eval "$(/opt/anaconda/anaconda3/bin/conda shell.bash hook)"
+conda activate
+which multiqc
+
 cd ../output
-/home/shared/MultiQC.v1.12.dev0/multiqc . -o ../output
+
+multiqc .
 ```
 
 
 
+MultiQC report available at
+https://gannet.fish.washington.edu/seashell/bu-github/steven-coursework/assignments/output/multiqc_report.html
 
 
+<iframe src="https://gannet.fish.washington.edu/seashell/bu-github/steven-coursework/assignments/output/multiqc_report.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Obtain the reference
 
@@ -228,6 +238,26 @@ points(tmp.sig$baseMean, tmp.sig$log2FoldChange, pch=20, cex=0.45, col="red")
 abline(h=c(-1,1), col="blue")
 ```
 
+```{r newplot, eval=TRUE}
+# Prepare the data for plotting
+res_df <- as.data.frame(deseq2.res)
+res_df$gene <- row.names(res_df)
+
+# Create volcano plot
+volcano_plot <- ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj), color = padj < 0.05)) +
+  geom_point(alpha = 0.6, size = 1.5) +
+  scale_color_manual(values = c("grey", "red")) +
+  labs(title = "Volcano Plot",
+       x = "Log2 Fold Change",
+       y = "-Log10 Adjusted P-value",
+       color = "Significantly\nDifferentially Expressed") +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "top")
+
+print(volcano_plot)
+```
 
 
 

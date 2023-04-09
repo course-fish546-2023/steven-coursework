@@ -23,3 +23,4 @@ DESeq2
 pheatmap
 RColorBrewer
 data.table
+DT
