@@ -17,6 +17,8 @@ output:
 library(knitr)
 library(tidyverse)
 library(kableExtra)
+library(DT)
+library(Biostrings)
 knitr::opts_chunk$set(
   echo = TRUE,         # Display code chunks
   eval = FALSE,         # Evaluate code chunks
@@ -27,6 +29,8 @@ knitr::opts_chunk$set(
   fig.align = "center" # Align plots to the center
 )
 ```
+
+
 
 This is product offers a workflow to take a few thousand unidentified sequences and provide a better understanding of what genes are present. This will be accomplished through using Blast and protein sequenes from UniProt/Swiss-prot.
 
@@ -83,6 +87,77 @@ echo "How many sequences are there?"
 grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 ```
 
+```{r histogram, eval=TRUE}
+# Read FASTA file
+fasta_file <- "../data/Ab_4denovo_CLC6_a.fa"  # Replace with the name of your FASTA file
+sequences <- readDNAStringSet(fasta_file)
+
+# Calculate sequence lengths
+sequence_lengths <- width(sequences)
+
+# Create a data frame
+sequence_lengths_df <- data.frame(Length = sequence_lengths)
+
+# Plot histogram using ggplot2
+ggplot(sequence_lengths_df, aes(x = Length)) +
+  geom_histogram(binwidth = 1, color = "grey", fill = "blue", alpha = 0.75) +
+  labs(title = "Histogram of Sequence Lengths",
+       x = "Sequence Length",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+```{r ACGT, eval=TRUE}
+
+# Read FASTA file
+fasta_file <- "../data/Ab_4denovo_CLC6_a.fa"
+sequences <- readDNAStringSet(fasta_file)
+
+# Calculate base composition
+base_composition <- alphabetFrequency(sequences, baseOnly = TRUE)
+
+# Convert to data frame and reshape for ggplot2
+base_composition_df <- as.data.frame(base_composition)
+base_composition_df$ID <- rownames(base_composition_df)
+base_composition_melted <- reshape2::melt(base_composition_df, id.vars = "ID", variable.name = "Base", value.name = "Count")
+
+# Plot base composition bar chart using ggplot2
+ggplot(base_composition_melted, aes(x = Base, y = Count, fill = Base)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Base Composition",
+       x = "Base",
+       y = "Count") +
+  theme_minimal() +
+  scale_fill_manual(values = c("A" = "green", "C" = "blue", "G" = "yellow", "T" = "red"))
+```
+
+
+```{r cg, eval=TRUE}
+# Read FASTA file
+fasta_file <- "../data/Ab_4denovo_CLC6_a.fa"
+sequences <- readDNAStringSet(fasta_file)
+
+# Count CG motifs in each sequence
+count_cg_motifs <- function(sequence) {
+  cg_motif <- "CG"
+  return(length(gregexpr(cg_motif, sequence, fixed = TRUE)[[1]]))
+}
+
+cg_motifs_counts <- sapply(sequences, count_cg_motifs)
+
+# Create a data frame
+cg_motifs_counts_df <- data.frame(CG_Count = cg_motifs_counts)
+
+# Plot CG motifs distribution using ggplot2
+ggplot(cg_motifs_counts_df, aes(x = CG_Count)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "blue", alpha = 0.75) +
+  labs(title = "Distribution of CG Motifs",
+       x = "Number of CG Motifs",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+
 # Running Blastx
 
 ```{r blastx, engine='bash'}
@@ -105,6 +180,9 @@ echo "Number of lines in output"
 wc -l ../output/Ab_4-uniprot_blastx.tab
 ```
 
+
+
+
 # Joining Blast table with annoations.
 
 ## Prepping Blast table for easy join
@@ -125,15 +203,20 @@ bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header =
 spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", sep = '\t', header = TRUE)
 ```
 
-```{r see, eval=TRUE, cache=TRUE}
-kbl(
-head(
+```{r, eval=TRUE}
+datatable(head(bltabl), options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, paging = FALSE))
+```
+
+```{r spgo-table, eval=TRUE}
+datatable(head(spgo), options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, paging = FALSE))
+```
+
+```{r see, eval=TRUE}
+datatable(
   left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
   select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
             pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab"))
 )
-) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
 ```{r join}
@@ -141,6 +224,35 @@ annot_tab <-
   left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
   select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
             pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab"))
+```
+
+
+```{r, eval=TRUE}
+# Read dataset
+dataset <- read.csv("../output/blast_annot_go.tab", sep = '\t')  # Replace with the path to your dataset
+
+# Select the column of interest
+column_name <- "Organism"  # Replace with the name of the column of interest
+column_data <- dataset[[column_name]]
+
+# Count the occurrences of the strings in the column
+string_counts <- table(column_data)
+
+# Convert to a data frame, sort by count, and select the top 10
+string_counts_df <- as.data.frame(string_counts)
+colnames(string_counts_df) <- c("String", "Count")
+string_counts_df <- string_counts_df[order(string_counts_df$Count, decreasing = TRUE), ]
+top_10_strings <- head(string_counts_df, n = 10)
+
+# Plot the top 10 most common strings using ggplot2
+ggplot(top_10_strings, aes(x = reorder(String, -Count), y = Count, fill = String)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Top 10 Species hits",
+       x = column_name,
+       y = "Count") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_flip()
 ```
 
 
@@ -156,6 +268,7 @@ What the Rmd looks like...
 ```{r real, echo = FALSE, eval=TRUE, fig.align = "left"}
 knitr::include_graphics("img/code2.png")
 ```
+
 
 
 it post knit...
