@@ -15,6 +15,7 @@ output:
 ```{r setup, include=FALSE}
 library(knitr)
 library(tidyverse)
+library(kableExtra)
 knitr::opts_chunk$set(
   echo = TRUE,         # Display code chunks
   eval = FALSE,         # Evaluate code chunks
@@ -27,9 +28,9 @@ knitr::opts_chunk$set(
 ```
 
 
-## Download Sequence for Database Creation
+# Download Sequence for Database Creation
 
-This is from 
+This is from ccc
 
 
 
@@ -41,17 +42,26 @@ gunzip -k uniprot_sprot_r2023_01.fasta.gz
 ls ../data
 ```
 
+
+
 ```{r make-blastdb, engine='bash'}
-~/applications/ncbi-blast-2.13.0+/bin/makeblastdb \
+mkdir ../blastdb
+/home/shared/ncbi-blast-2.11.0+/bin/makeblastdb \
 -in ../data/uniprot_sprot_r2023_01.fasta \
 -dbtype prot \
 -out ../blastdb/uniprot_sprot_r2023_01
 ```
 
+
+# Getting a query fasta file
+
 ```{r download-query, engine='bash'}
 curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
 -k \
 > ../data/Ab_4denovo_CLC6_a.fa
+```
+
+```{r view-query, engine='bash', eval=TRUE}
 head ../data/Ab_4denovo_CLC6_a.fa
 echo "How many sequences are there?"
 grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
@@ -68,19 +78,53 @@ grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 -outfmt 6
 ```
 
-
-
-```{r process-data}
-bltabl <- read_csv("../output/Ab_4-uniprot_blastx.tab", col_names = FALSE, col_types = cols())
-spgo <- read_csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", col_types = cols())
-
-left_join(bltabl, spgo,  by = c("X4" = "X1")) %>%
-  select(X1, X4, X14, X3, X2, X11, X12) %>% 
-  mutate(X1 = str_replace_all(X1, 
-            pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab")) %>%
-  write_delim("../output/blast_annot_go.tab", delim = '\t')
+```{r blast-look, engine='bash', eval=TRUE}
+head ../output/Ab_4-uniprot_blastx.tab
+echo "Number of lines in output"
+wc -l ../output/Ab_4-uniprot_blastx.tab
 ```
 
-```{r process-table}
-annot_tab <- read_csv("../output/blast_annot_go.tab", col
-```                      
+# Clean up plast
+
+```{r separate, engine='bash', eval=TRUE}
+tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
+> ../output/Ab_4-uniprot_blastx_sep.tab
+
+head -1 ../output/Ab_4-uniprot_blastx_sep.tab
+
+```
+
+
+
+
+## Could do some cool stuff in R here reading in table 
+
+```{r read-data, eval=TRUE, cache=TRUE}
+bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
+
+spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", sep = '\t', header = TRUE)
+```
+
+```{r see, eval=TRUE}
+kbl(
+head(
+  left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
+  select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
+            pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab"))
+)
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+```{r join}
+annot_tab <-
+  left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
+  select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
+            pattern = "solid0078_20110412_FRAG_BC_WHITE_WHITE_F3_QV_SE_trimmed", replacement = "Ab"))
+```
+
+
+                
