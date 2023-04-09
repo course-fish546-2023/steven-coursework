@@ -109,6 +109,8 @@ spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_tabl
 joining
 
 
+
+
 ```{{r}}
 left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
   select(V1, V3, V13, Protein.names, Organism, Gene.Ontology..biological.process., Gene.Ontology.IDs) %>% mutate(V1 = str_replace_all(V1, 
