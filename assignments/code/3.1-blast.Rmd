@@ -5,12 +5,13 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   html_document:
     theme: readable
+    highlight: zenburn
     toc: true
     toc_float: true
     number_sections: true
     code_folding: show
+    code_download: true
 ---
-
 
 ```{r setup, include=FALSE}
 library(knitr)
@@ -27,22 +28,33 @@ knitr::opts_chunk$set(
 )
 ```
 
-
-# Download Sequence for Database Creation
-
-This is from ccc
+This is product offers a workflow to take a few thousand unidentified sequences and provide a better understanding of what genes are present. This will be accomplished through using Blast and protein sequenes from UniProt/Swiss-prot.
 
 
+
+------------------------------------------------------------------------
+
+A few weeks ago I perfected software installation, so I will not demonstrate that here. Please see this notebook for more.
+
+# Database Creation
+
+## Obtain Fasta (UniProt/Swiss-Prot)
+
+This is from here picur reviewe sequences I named based on the identify of the database given
+
+```{r time, eval=TRUE, echo=FALSE}
+current_time <- format(Sys.time(), "%B %d, %Y %H:%M:%S")
+cat("current date and time is ", current_time)
+```
 
 ```{r download-data, engine='bash'}
 cd ../data
 curl -O https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
 mv uniprot_sprot.fasta.gz uniprot_sprot_r2023_01.fasta.gz
 gunzip -k uniprot_sprot_r2023_01.fasta.gz
-ls ../data
 ```
 
-
+## Making the database
 
 ```{r make-blastdb, engine='bash'}
 mkdir ../blastdb
@@ -52,8 +64,7 @@ mkdir ../blastdb
 -out ../blastdb/uniprot_sprot_r2023_01
 ```
 
-
-# Getting a query fasta file
+# Getting the query fasta file
 
 ```{r download-query, engine='bash'}
 curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
@@ -61,11 +72,18 @@ curl https://eagle.fish.washington.edu/cnidarian/Ab_4denovo_CLC6_a.fa \
 > ../data/Ab_4denovo_CLC6_a.fa
 ```
 
+Exploring what fasta file
+
 ```{r view-query, engine='bash', eval=TRUE}
-head ../data/Ab_4denovo_CLC6_a.fa
+head -3 ../data/Ab_4denovo_CLC6_a.fa
+```
+
+```{r view2-query, engine='bash', eval=TRUE}
 echo "How many sequences are there?"
 grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 ```
+
+# Running Blastx
 
 ```{r blastx, engine='bash'}
 ~/applications/ncbi-blast-2.13.0+/bin/blastx \
@@ -79,12 +97,17 @@ grep -c ">" ../data/Ab_4denovo_CLC6_a.fa
 ```
 
 ```{r blast-look, engine='bash', eval=TRUE}
-head ../output/Ab_4-uniprot_blastx.tab
+head -2 ../output/Ab_4-uniprot_blastx.tab
+```
+
+```{r blast-look2, engine='bash', eval=TRUE}
 echo "Number of lines in output"
 wc -l ../output/Ab_4-uniprot_blastx.tab
 ```
 
-# Clean up plast
+# Joining Blast table with annoations.
+
+## Prepping Blast table for easy join
 
 ```{r separate, engine='bash', eval=TRUE}
 tr '|' '\t' < ../output/Ab_4-uniprot_blastx.tab \
@@ -94,10 +117,7 @@ head -1 ../output/Ab_4-uniprot_blastx_sep.tab
 
 ```
 
-
-
-
-## Could do some cool stuff in R here reading in table 
+## Could do some cool stuff in R here reading in table
 
 ```{r read-data, eval=TRUE, cache=TRUE}
 bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header = FALSE)
@@ -105,7 +125,7 @@ bltabl <- read.csv("../output/Ab_4-uniprot_blastx_sep.tab", sep = '\t', header =
 spgo <- read.csv("https://gannet.fish.washington.edu/seashell/snaps/uniprot_table_r2023_01.tab", sep = '\t', header = TRUE)
 ```
 
-```{r see, eval=TRUE}
+```{r see, eval=TRUE, cache=TRUE}
 kbl(
 head(
   left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
@@ -116,9 +136,6 @@ head(
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-
-
-
 ```{r join}
 annot_tab <-
   left_join(bltabl, spgo,  by = c("V3" = "Entry")) %>%
@@ -127,4 +144,22 @@ annot_tab <-
 ```
 
 
-                
+
+
+
+# Footnote
+
+What you  see versus what is in Rmd
+
+What the Rmd looks like...
+
+```{r real, echo = FALSE, eval=TRUE, fig.align = "left"}
+knitr::include_graphics("img/code2.png")
+```
+
+
+it post knit...
+
+```{r view-query., engine='bash', eval=TRUE}
+head -3 ../data/Ab_4denovo_CLC6_a.fa
+```
