@@ -1,5 +1,5 @@
 ---
-title: "Differentially Expressed Genes"
+title: "RNA-seq"
 author: Steven Roberts
 date: "`r format(Sys.time(), '%d %B, %Y')`"  
 output: 
@@ -22,6 +22,7 @@ library(pheatmap)
 library(RColorBrewer)
 library(data.table)
 library(DT)
+library(Biostrings)
 knitr::opts_chunk$set(
   echo = TRUE,         # Display code chunks
   eval = FALSE,         # Evaluate code chunks
@@ -211,6 +212,28 @@ deseq2.res <- results(deseq2.dds)
 deseq2.res <- deseq2.res[order(rownames(deseq2.res)), ]
 ```
 
+```{r PCA, eval=TRUE}
+vsd <- vst(deseq2.dds, blind = FALSE)
+plotPCA(vsd, intgroup = "condition")
+```
+
+```{r heatmap, eval=TRUE}
+# Select top 50 differentially expressed genes
+res <- results(deseq2.dds)
+res_ordered <- res[order(res$padj), ]
+top_genes <- row.names(res_ordered)[1:50]
+
+# Extract counts and normalize
+counts <- counts(deseq2.dds, normalized = TRUE)
+counts_top <- counts[top_genes, ]
+
+# Log-transform counts
+log_counts_top <- log2(counts_top + 1)
+
+# Generate heatmap
+pheatmap(log_counts_top, scale = "row")
+```
+
 
 ```{r, eval=TRUE}
 head(deseq2.res)
@@ -267,6 +290,9 @@ write.table(tmp.sig, "../output/DEGlist.tab", sep = '\t', row.names = T)
 
 ```{r, eval=TRUE}
 deglist <- read.csv("../output/DEGlist.tab", sep = '\t', header = TRUE)
+deglist$RowName <- rownames(deglist)
+deglist2 <- deglist[, c("RowName", "pvalue")] # Optionally, reorder the columns
+print(deglist)
 ```
 
 
@@ -275,4 +301,42 @@ datatable(deglist)
 ```
 
 
-#Can we find out what these genes are?
+# Can we find out what these genes are?
+
+
+# Gene Enrichment Analysis
+
+```{r}
+gene_deg_status <- res_df %>%
+  mutate(degstaus = ifelse(padj < 0.05, 1, 0))
+```
+
+```{r}
+# Read the FASTA file
+fasta_data <- readDNAStringSet("../data/rna.fna")
+
+# Calculate gene lengths
+gene_lengths <- width(fasta_data)
+
+
+# Extract gene names/IDs from sequence IDs
+gene_names <- sapply(names(fasta_data), function(x) strsplit(x, " ")[[1]][1])
+
+# Create a data frame with gene IDs and lengths
+gene_lengths_df <- data.frame(geneID = gene_names, length = gene_lengths)
+
+```
+
+
+##  Need GO Mappings 
+
+
+
+
+```{r}
+pwf <- nullp(gene_data, bias.data = gene_lengths)
+
+GO_analysis <- goseq(pwf, gene2cat = "your_organism_GO_mapping")
+
+```
+

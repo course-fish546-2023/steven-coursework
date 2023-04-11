@@ -19,6 +19,7 @@ library(tidyverse)
 library(kableExtra)
 library(DT)
 library(Biostrings)
+library(tm)
 knitr::opts_chunk$set(
   echo = TRUE,         # Display code chunks
   eval = FALSE,         # Evaluate code chunks
@@ -253,10 +254,56 @@ ggplot(top_10_strings, aes(x = reorder(String, -Count), y = Count, fill = String
   theme_minimal() +
   theme(legend.position = "none") +
   coord_flip()
+
+
+```
+```{r go, eval=TRUE}
+
+
+data <- read.csv("../output/blast_annot_go.tab", sep = '\t')
+
+# Rename the `Gene.Ontology..biological.process.` column to `Biological_Process`
+colnames(data)[colnames(data) == "Gene.Ontology..biological.process."] <- "Biological_Process"
+
+# Separate the `Biological_Process` column into individual biological processes
+data_separated <- unlist(strsplit(data$Biological_Process, split = ";"))
+
+# Trim whitespace from the biological processes
+data_separated <- gsub("^\\s+|\\s+$", "", data_separated)
+
+# Count the occurrences of each biological process
+process_counts <- table(data_separated)
+process_counts <- data.frame(Biological_Process = names(process_counts), Count = as.integer(process_counts))
+process_counts <- process_counts[order(-process_counts$Count), ]
+
+# Select the 20 most predominant biological processes
+top_20_processes <- process_counts[1:20, ]
+
+# Create a color palette for the bars
+bar_colors <- rainbow(nrow(top_20_processes))
+
+# Create a staggered vertical bar plot with different colors for each bar
+barplot(top_20_processes$Count, names.arg = rep("", nrow(top_20_processes)), col = bar_colors,
+        ylim = c(0, max(top_20_processes$Count) * 1.25),
+        main = "Occurrences of the 20 Most Predominant Biological Processes", xlab = "Biological Process", ylab = "Count")
+
+
+# Create a separate plot for the legend
+png("../output/GOlegend.png", width = 800, height = 600)
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("center", legend = top_20_processes$Biological_Process, fill = bar_colors, cex = 1, title = "Biological Processes")
+dev.off()
+```
+
+```{r legend, eval=TRUE, fig.width = 100 ,fig.height = 100}
+knitr::include_graphics("../output/GOlegend.png")
 ```
 
 
-#Shiny App
+
+
+# Shiny App
 
 see https://sr320.shinyapps.io/Ab-blast-go/
 
