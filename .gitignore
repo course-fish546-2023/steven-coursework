@@ -6,3 +6,5 @@ assignments/blastdb
 uniprot_sprot.fasta.gz
 .Renviron
 .DS_Store
+assignments/code/*cache/*/*
+

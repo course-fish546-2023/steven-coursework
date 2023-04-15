@@ -8,6 +8,6 @@
 	"p_unique": 34.5,
 	"kallisto_version": "0.46.1",
 	"index_version": 10,
-	"start_time": "Tue Apr  4 20:15:59 2023",
+	"start_time": "Sun Apr  9 07:23:38 2023",
 	"call": "/home/shared/kallisto/kallisto quant -i ../data/cgigas_roslin_rna.index -o ../output/kallisto_01/N50_S187 -t 40 --single -l 100 -s 10 ../data/N50_S187_L001_R1_001.fastq.gz"
 }
