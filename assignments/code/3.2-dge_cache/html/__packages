@@ -24,3 +24,5 @@ pheatmap
 RColorBrewer
 data.table
 DT
+XVector
+Biostrings

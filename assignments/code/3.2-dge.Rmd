@@ -119,10 +119,20 @@ curl -O https://gannet.fish.washington.edu/seashell/bu-github/nb-2023/Cgigas/dat
 ## Index Reference
 
 ```{r kallisto, engine='bash'}
+#!/bin/bash
+
+# run kallisto to index the transcriptome
 /home/shared/kallisto/kallisto \
+
+# index the transcriptome
 index -i \
+
+# specify the output file name
 ../data/cgigas_roslin_rna.index \
+
+# specify the input file name
 ../data/rna.fna
+
 ```
 
 ## Align reads
@@ -193,6 +203,13 @@ str(countmatrix)
 ```
 
 
+```{r}
+dim(countmatrix)
+dim(deseq2.colData)
+```
+```{r}
+length(colnames(data))
+```
 
 
 ```{r, eval=TRUE}
@@ -292,7 +309,6 @@ write.table(tmp.sig, "../output/DEGlist.tab", sep = '\t', row.names = T)
 deglist <- read.csv("../output/DEGlist.tab", sep = '\t', header = TRUE)
 deglist$RowName <- rownames(deglist)
 deglist2 <- deglist[, c("RowName", "pvalue")] # Optionally, reorder the columns
-print(deglist)
 ```
 
 
@@ -301,14 +317,28 @@ datatable(deglist)
 ```
 
 
-# Can we find out what these genes are?
+# Annotation?
+```{r}
+cg_sp <- read.csv("https://raw.githubusercontent.com/sr320/nb-2022/main/C_gigas/analyses/CgR-blastp-sp.tab", header = FALSE, sep="\t")  %>%
+  distinct(V1, .keep_all = TRUE)
+```
+
+```{r}
+loc <- read.csv("https://raw.githubusercontent.com/sr320/nb-2022/main/C_gigas/analyses/LOC_Acc.tab", sep = " ", header = FALSE)
+```
+
+```{r}
+comb <- left_join(loc, cg_sp, by = c("V2" = "V1")) %>%
+  left_join(deglist, by = c("V1" = "RowName"))
+```
+
 
 
 # Gene Enrichment Analysis
 
 ```{r}
 gene_deg_status <- res_df %>%
-  mutate(degstaus = ifelse(padj < 0.05, 1, 0))
+  mutate(degstaus = ifelse(padj < 0.05, 1, 0)) 
 ```
 
 ```{r}

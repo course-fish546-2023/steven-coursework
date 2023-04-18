@@ -1,0 +1,13 @@
+{
+	"n_targets": 63341,
+	"n_bootstraps": 0,
+	"n_processed": 2095872,
+	"n_pseudoaligned": 432847,
+	"n_unique": 230028,
+	"p_pseudoaligned": 20.7,
+	"p_unique": 11.0,
+	"kallisto_version": "0.46.1",
+	"index_version": 10,
+	"start_time": "Tue Apr 11 14:30:39 2023",
+	"call": "/home/shared/kallisto/kallisto quant -i ../data/cgigas_roslin_cds_genomic.index -o ../output/kallisto_02/N55_S190 -t 40 --single -l 100 -s 10 ../data/N55_S190_L001_R1_001.fastq.gz"
+}
